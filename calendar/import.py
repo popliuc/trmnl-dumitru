@@ -1,6 +1,6 @@
 import os
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta 
 from ics import Calendar, Event
 import win32com.client
 import pytz
@@ -53,8 +53,8 @@ for item in restricted_items:
         e = Event()
         e.name = item.Subject
 
-        e.begin = item.Start.astimezone(tz).isoformat()
-        e.end = item.End.astimezone(tz).isoformat()
+        e.begin = (item.Start.astimezone(tz) - timedelta(hours=3)).isoformat() 
+        e.end = (item.End.astimezone(tz)- timedelta(hours=3)).isoformat() 
 
         e.uid = str(uuid4()) + "@outlook"
         e.created = datetime.now(tz)
