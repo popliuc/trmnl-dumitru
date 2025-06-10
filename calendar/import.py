@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from ics import Calendar, Event
 import win32com.client
 
+from uuid import uuid4
+
+
 # === Configurare ===
 REPO_PATH = r"C:\Users\M67E313\repos\trmnl\trmnl-images\calendar"  # modifică după caz
 ICS_FILE = "calendar.ics"
@@ -32,7 +35,7 @@ print(f"📅 Total evenimente inițiale în calendar: {len(items)}")
 
 restriction = "[Start] >= '{}' AND [End] <= '{}'".format(
     start_of_week.strftime("%m/%d/%Y %H:%M %p"),
-    end_of_week.strftime("%m/%d/%Y %H:%M %p")
+    end_of_week.strftime("%m/%d/%Y %H:%M %p"),
 )
 print(f"🔍 Restricție aplicată: {restriction}")
 restricted_items = items.Restrict(restriction)
@@ -43,15 +46,30 @@ print(f"📅 Evenimente găsite după restrict: {len(restricted_items)}")
 calendar = Calendar()
 evenimente_adaugate = 0
 
+
 for item in restricted_items:
     try:
         e = Event()
-        print(item.Subject)
         e.name = item.Subject
         e.begin = item.Start.Format("%Y-%m-%d %H:%M:%S")
         e.end = item.End.Format("%Y-%m-%d %H:%M:%S")
-        # e.description = item.Body[:200] if item.Body else ""
-        # e.location = item.Location
+        e.uid = str(uuid4()) + "@outlook"
+        e.created = datetime.now()
+
+        # # Optional fields
+        if item.Location:
+            e.location = item.Location
+        
+        try:
+            body = item.Body
+            if isinstance(body, str) and body.strip():
+                e.description = body.strip()[:500] # Limit to 500 characters
+        except Exception as ex:
+            print(f"⚠️ Nu s-a putut accesa corpul evenimentului: {ex}")
+
+        # Mark as cancelled if subject starts with "Canceled:"
+        if item.Subject.lower().startswith("canceled:"):
+            e.status = "CANCELLED"
 
         calendar.events.add(e)
         evenimente_adaugate += 1
@@ -72,7 +90,7 @@ print(f"📦 Evenimente incluse: {evenimente_adaugate}")
 commands = [
     ["git", "add", ICS_FILE],
     ["git", "commit", "-m", COMMIT_MSG],
-    ["git", "push"]
+    ["git", "push"],
 ]
 
 for cmd in commands:
