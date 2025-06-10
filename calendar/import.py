@@ -3,7 +3,7 @@ import subprocess
 from datetime import datetime, timedelta
 from ics import Calendar, Event
 import win32com.client
-
+import pytz
 from uuid import uuid4
 
 
@@ -46,24 +46,27 @@ print(f"📅 Evenimente găsite după restrict: {len(restricted_items)}")
 calendar = Calendar()
 evenimente_adaugate = 0
 
+tz = pytz.timezone("Europe/Bucharest")
 
 for item in restricted_items:
     try:
         e = Event()
         e.name = item.Subject
-        e.begin = item.Start.Format("%Y-%m-%d %H:%M:%S")
-        e.end = item.End.Format("%Y-%m-%d %H:%M:%S")
+
+        e.begin = item.Start.astimezone(tz).isoformat()
+        e.end = item.End.astimezone(tz).isoformat()
+
         e.uid = str(uuid4()) + "@outlook"
-        e.created = datetime.now()
+        e.created = datetime.now(tz)
 
         # # Optional fields
         if item.Location:
             e.location = item.Location
-        
+
         try:
             body = item.Body
             if isinstance(body, str) and body.strip():
-                e.description = body.strip()[:500] # Limit to 500 characters
+                e.description = body.strip()[:500]  # Limit to 500 characters
         except Exception as ex:
             print(f"⚠️ Nu s-a putut accesa corpul evenimentului: {ex}")
 
