@@ -46,7 +46,7 @@ print(f"📅 Evenimente găsite după restrict: {len(restricted_items)}")
 calendar = Calendar()
 evenimente_adaugate = 0
 
-tz = pytz.timezone("Europe/Bucharest")
+tz = pytz.utc
 
 for item in restricted_items:
     try:
